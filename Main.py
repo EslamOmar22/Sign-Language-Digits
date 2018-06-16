@@ -6,8 +6,8 @@ import h5py
 
 
 def load_dataset():
-    images = np.load('0-9 data/X.npy')
-    labels = np.load('0-9 data/Y.npy')
+    images = np.load('X.npy')
+    labels = np.load('Y.npy')
     np.random.seed(3)
     permutation = list (np.random.permutation (images.shape[0]))
     images = images[permutation , : , :]
@@ -61,8 +61,6 @@ def initialize_parameters():
     parameters = {}
     parameters["W1"] = tf.get_variable('W1', [4, 4, 3, 8], initializer=tf.contrib.layers.xavier_initializer(seed=0))
     parameters["W2"] = tf.get_variable('W2', [4, 4, 8, 16], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-    parameters["W3"] = tf.get_variable('W3', [2, 2, 16, 32], initializer=tf.contrib.layers.xavier_initializer(seed=0))
-
 
     return parameters
 
@@ -76,23 +74,18 @@ def forward_prop(X , parameters):
     A2 = tf.nn.relu (Z2)
     P2 = tf.nn.max_pool (A2 , ksize=[1 , 4 , 4 , 1] , strides=[1 , 4 , 4 , 1] , padding="SAME")
 
-    Z3 = tf.nn.conv2d (P2 , parameters["W3"] , strides=[1 , 1 , 1 , 1] , padding="SAME")
-    A3 = tf.nn.relu (Z3)
-    P3 = tf.nn.max_pool (A3 , ksize=[1 , 2 , 2 , 1] , strides=[1 , 2 , 2 , 1] , padding="SAME")
-
     flatten = tf.contrib.layers.flatten (P3)
     FC = tf.contrib.layers.fully_connected (flatten , 10 , activation_fn=None)
 
     return FC
 
 
-def compute_cost(FC, Y, para):
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=FC, labels=Y)+ .01 *tf.nn.l2_loss(para["W1"])+.01 * tf.nn.l2_loss(para["W2"])
-                          + .01*tf.nn.l2_loss(para["W3"]))
+def compute_cost(FC, Y, parameters,factor):
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=FC, labels=Y)+ factor *tf.nn.l2_loss(parameters["W1"])+factor* tf.nn.l2_loss(parameters["W2"]))
     return cost
 
 
-def model(X_train, X_test, Y_train, Y_test, learning_rate=.008, epochs=100, minibatch_size=64, print_cost=True):
+def train_model(X_train, X_test, Y_train, Y_test, learning_rate=.008, epochs=100, minibatch_size=64, print_cost=True, factor= .01):
     tf.set_random_seed(0)
     costs = []
     seed = 3
@@ -103,7 +96,7 @@ def model(X_train, X_test, Y_train, Y_test, learning_rate=.008, epochs=100, mini
     m = X_train.shape[0]
     parameters = initialize_parameters()
     FC = forward_prop(X, parameters)
-    cost = compute_cost(FC, Y, parameters)
+    cost = compute_cost(FC, Y, parameters, factor)
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
     init = tf.global_variables_initializer()
@@ -128,9 +121,8 @@ def model(X_train, X_test, Y_train, Y_test, learning_rate=.008, epochs=100, mini
         #Saving best weights
         np.save ("W1.npy" , parameters["W1"].eval (session=sess))
         np.save ("W2.npy" , parameters["W2"].eval (session=sess))
-        np.save ('W3.npy' , parameters["W3"].eval (session=sess))
 
-        #Plotting
+        #Plotting learning curve
         plt.plot(np.squeeze(costs))
         plt.ylabel ('cost')
         plt.xlabel('iterations (per tens)')
@@ -150,15 +142,13 @@ def model(X_train, X_test, Y_train, Y_test, learning_rate=.008, epochs=100, mini
 
         return parameters
 
-
+#predict with your own image
 def predict(parameters, X):
     W1 = tf.convert_to_tensor (parameters["W1"])
     W2 = tf.convert_to_tensor (parameters["W2"])
-    W3 = tf.convert_to_tensor (parameters["W3"])
 
     params = {"W1": W1 ,
               "W2": W2 ,
-              "W3": W3 ,
               }
     x = tf.placeholder ("float" , [1, 64, 64, 3])
 
@@ -174,6 +164,6 @@ def predict(parameters, X):
 if __name__ == '__main__':
     parameters = {}
     X_train , X_test , Y_train , Y_test = load_dataset ()
-    W1 , W2 , W3 = model (X_train , X_test , Y_train , Y_test , learning_rate=.009 , epochs=150 , minibatch_size=64)
+    parameters = trian_model (X_train , X_test , Y_train , Y_test , learning_rate=.009 , epochs=120 , minibatch_size=64, factor=.005 )
 
    
