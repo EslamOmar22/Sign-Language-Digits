@@ -7,7 +7,7 @@ import h5py
 
 def load_dataset():
     images = np.load('0-9 data/X.npy')
-    labels = np.load('0-9/data/Y.npy')
+    labels = np.load('0-9 data/Y.npy')
     np.random.seed(3)
     permutation = list (np.random.permutation (images.shape[0]))
     images = images[permutation , : , :]
@@ -28,24 +28,7 @@ def load_dataset():
     return train_X, test_X, train_Y, test_Y
 
 
-def load_andrewdata():
-    train_dataset = h5py.File ('0-5 data/train_signs.h5' , "r")
-    train_X = np.array (train_dataset["train_set_x"][:])/255  # your train set features
-    train_Y = np.array (train_dataset["train_set_y"][:])  # your train set labels
-
-    test_dataset = h5py.File ('0-5 data/test_signs.h5' , "r")
-    test_X = np.array (test_dataset["test_set_x"][:])/255  # your test set features
-    test_Y= np.array (test_dataset["test_set_y"][:])  # your test set labels
-
-    train_Y = train_Y.reshape ((1 , train_Y.shape[0]))
-    test_Y = test_Y.reshape ((1 , test_Y.shape[0]))
-    train_Y= np.eye (6)[train_Y.reshape (-1)]
-    test_Y= np.eye (6)[test_Y.reshape (-1)]
-
-    return train_X, test_X, train_Y, test_Y
-
-
-def makemini_batches(X, Y, mini_batch_size, seed):
+def make_mini_batches(X, Y, mini_batch_size, seed):
     m = X.shape[0]
     mini_batches = []
     np.random.seed(seed)
@@ -191,16 +174,6 @@ def predict(parameters, X):
 if __name__ == '__main__':
     parameters = {}
     X_train , X_test , Y_train , Y_test = load_dataset ()
-    #W1 , W2 , W3 = model (X_train , X_test , Y_train , Y_test , learning_rate=.009 , epochs=150 , minibatch_size=64)
+    W1 , W2 , W3 = model (X_train , X_test , Y_train , Y_test , learning_rate=.009 , epochs=150 , minibatch_size=64)
 
-    #
-    parameters["W1"] = np.float32(np.load("trained weights/W1.npy"))
-    parameters["W2"] = np.float32(np.load("trained weights/W2.npy"))
-    parameters["W3"] = np.float32(np.load("trained weights/W3.npy"))
-
-    X_test = np.float32(X_test)
-    print(Y_test[2])
-    x = X_test[2].reshape((1, 64, 64, 3))
-    pred = predict(parameters, x)
-    print(str(np.squeeze(pred)))
-
+   
