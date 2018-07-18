@@ -106,7 +106,7 @@ def train_model(X_train, X_test, Y_train, Y_test, learning_rate=.008, epochs=100
             minibatch_cost = 0.
             num_minibatches = int(m / minibatch_size)
             seed = seed + 1
-            minibatches = makemini_batches(X_train, Y_train, minibatch_size, seed)
+            minibatches = make_mini_batches(X_train, Y_train, minibatch_size, seed)
 
             for minibatch in minibatches:
                 (minibatch_X, minibatch_Y) = minibatch
